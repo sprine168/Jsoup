@@ -27,6 +27,7 @@ def subjectCreate() throws IO {
             sql.executeInsert(insert, params)
         }
     }
+    println "Subject Table Created Successfully!"
     sql.close()
 }
 
@@ -42,11 +43,12 @@ def departmentCreate() throws IO {
         def fullName = row.text()
 
         if (!abbrvCells.equals("ALL")) {
-            def insert = "Insert into Subjects(ABBRV, Subject) VALUES(? , ?)"
+            def insert = "Insert into Departments(ABBRV, Department) VALUES(? , ?)"
             def params = [abbrvCells, fullName]
             sql.executeInsert(insert, params)
         }
     }
+    println "Department Table Created Successfully!"
     sql.close()
 }
 
@@ -75,20 +77,50 @@ def printSubjects() throws IO {
 def printDepartments() throws IO {
     def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
 
-    sql.eachRow('SELECT * FROM Departments'){
-        print it
+    sql.eachRow('SELECT * FROM Departments') {
+        println it
     }
     sql.close()
 }
 
-//a in menu is to create departments table
-//b in menu is to create subjects table
-println "A: Erase and build Subjects Table\tB:Erase and Build Departments Table\n " +
-        "C: Print Departments Tablet\tPrint the report of disciplines by Department\n" +
-        "D: Print Departments Table\tPrint the report of disciplines by Department\n" +
-        "Erase and build sections data"
+println "A: Erase and Build Subjects table"
+println "B: Erase and Build Departments table"
+println "C: Print Subjects table"
+println "D: Print Departments table"
+println "E: Print the report of disciplines by Department"
+println "G: Erase and build sections data"
+println "H: Print a simple listing of all sections by department or by discipline"
+println "I: Print faculty and faculty schedules  by department"
+println "J: Print control-break section report for a department"
+println "K: Produce the control-break output"
+println "Q: Quit"
+println "\t\tPlease Select A Character"
 
-def menu
+//User input
+Scanner input = new Scanner(System.in)
+String s = input.next().toLowerCase().trim()
+println s
 
-printSubjects()
-printDepartments()
+//Menu Controller
+switch (s) {
+    case "a":
+        subjectsDelete()
+        subjectCreate(); break
+    case "b":
+        departmentDelete()
+        departmentCreate(); break
+    case "c":
+        printSubjects();
+        break
+    case "d":
+        printDepartments();
+        break
+    case "e":
+        println "future disciplines print"
+        break
+    case "quit":
+        println "System is now exiting"
+        break
+    default:
+        println "Entry Not Accepted Now Exiting"
+}
