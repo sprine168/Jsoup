@@ -82,13 +82,35 @@ def printDepartments() throws IO {
     }
     sql.close()
 }
+//Kielan start methods
+def sectionCreate(String s){
+    GroovyWebScrape.getSections(s)
+
+}
+
+def sectionDelete(String s) throws IO {
+    def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
+    def delete = "DELETE FROM Section Where dept like ${s}" // EXISTS(Select * from Section)"
+    sql.execute(delete)
+    sql.close()
+}
+
+
+def printSections(String s){
+    def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
+
+    sql.eachRow("SELECT * FROM Section WHERE dept LIKE ${s} OR discipline LIKE ${s}"){
+        println it
+    }
+    sql.close()
+}
 
 println "A: Erase and Build Subjects table"
 println "B: Erase and Build Departments table"
 println "C: Print Subjects table"
 println "D: Print Departments table"
 println "E: Print the report of disciplines by Department"
-println "G: Erase and build sections data"
+println "G: Erase and Build Ssections data"
 println "H: Print a simple listing of all sections by department or by discipline"
 println "I: Print faculty and faculty schedules  by department"
 println "J: Print control-break section report for a department"
@@ -118,6 +140,25 @@ switch (s) {
     case "e":
         println "future disciplines print"
         break
+    //Kielan
+    case "g":
+        println "Enter Department for sections"
+        i = input.next().toUpperCase().trim()
+        sectionDelete(i)
+        sectionCreate(i)
+        break
+    case "h":
+        println "Enter Department or Discipline"
+        i = input.next().toUpperCase().trim()
+        printSections(i)
+        break
+    case "i":
+        break
+    case "j":
+        break
+    case "k":
+        break
+    //end of Kielans add
     case "quit":
         println "System is now exiting"
         break

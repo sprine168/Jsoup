@@ -10,6 +10,8 @@
                    a class name "list_row" or a class name "detail_row"
  */
 
+
+import groovy.sql.Sql
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -18,8 +20,8 @@ import org.jsoup.select.Elements
 
 class GroovyWebScrape{
 
-    static def getSections(dept, semester) {
-        println "Department $dept for semester $semester"
+    static def getSections(dept) {
+        println "Department $dept"
         Section sec = null
         def baseURL = "https://aps2.missouriwestern.edu/schedule/?tck=201910"
         Connection.Response res = Jsoup.connect(baseURL)
@@ -35,6 +37,9 @@ class GroovyWebScrape{
 
         Document doc = res.parse()
 //        Document doc = Jsoup.parse(new File("CSMP.html"), "UTF-8", baseURL)
+        def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
+
+
 
 
         Elements rows = doc.select("tr")
@@ -51,8 +56,18 @@ class GroovyWebScrape{
                 if (className == "list_row") {
                     //this handles the cases where there is multiple class times without printing two sections
                     if (sec != null && sec.term != null) {
-                        println "Section: $sec"
-                        rC++
+                        def insert = "Insert into Section(dept, crn, courseID, discipline, courseNumber, sectionNumber," +
+                                " term, " +
+                                "classType, days, classTime, room, instructor, beginDate, endDate, hours, availableSeats," +
+                                "maximumEnrollment, message, additionalMessage, fees, perWhat, url) VALUES(? , ? , ? , ?" +
+                                ", ? , ? , ? , ?, ? , ? , ? , ?, ? , ? , ? , ?, ? , ? , ? , ? , ? ,?)"
+                        def params = [sec.department, sec.crn, sec.courseID, sec.discipline, sec.courseNumber,
+                                      sec.secNum, sec.term, sec.classType, sec.days, sec.time, sec.room, sec.instructor,
+                                        sec.beginDate, sec.endDate, sec.hours, sec.availableSeats, sec.maximumEnrollment,
+                        sec.message, sec.additionalMessage, sec.fees, sec.perWhat, sec.webPage]
+                        sql.executeInsert(insert, params)
+//                        println "Section: $sec"
+//                        rC++
                     }
 
                     def cellCount = cells.size()
@@ -71,8 +86,8 @@ class GroovyWebScrape{
                             sec.courseID = cells.get(1).text().trim()
                             def cN = cells.get(1).text().trim()
                             sec.secNum = cells.get(2).text().trim()
-//                            sec.discipline = cN.take(3)
-//                            sec.courseNumber = cN.drop(3)
+                            sec.discipline = cN.take(3)
+                            sec.courseNumber = cN.drop(3)
                             def type = cells.get(3).text().trim().split("\\,")
 
 //                            sec.classType = cells.get(3).text().trim()
@@ -162,8 +177,9 @@ class GroovyWebScrape{
 
         }
         //write to db
-        println "Section: ${sec}"
-        println rC
+//        println "Section: ${sec}"
+//        println rC
+        sql.close()
     }//end of getSections
 
 }//end of class Sections

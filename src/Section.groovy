@@ -7,6 +7,8 @@ class Section {
     def department
     def crn
     def courseID
+    def discipline
+    def courseNumber
     def secNum
     def classType
     def term
@@ -33,6 +35,8 @@ class Section {
         return "Section{department='${department}', " +
                 "CRN='${crn}', " +
                 "courseID='${courseID}', " +
+                "discipline='${discipline}', " +
+                "courseNumber='${courseNumber}', " +
                 "section='${secNum}', " +
                 "term='${term}', " +
                 "classType='${classType}', " +
