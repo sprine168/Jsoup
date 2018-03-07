@@ -85,6 +85,7 @@ def printDepartments() throws IO {
 //Kielan start methods
 def sectionCreate(String s){
     GroovyWebScrape.getSections(s)
+    println "Section Table Created Successfully for Department ${s}!"
 
 }
 
@@ -105,12 +106,22 @@ def printSections(String s){
     sql.close()
 }
 
+def printFaculty(String s) {
+    def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
+
+    sql.eachRow("SELECT instructor, days, classTime FROM Section WHERE dept LIKE ${s}"){
+        println it
+    }
+    sql.close()
+}
+//End of Kielan's methods
+
 println "A: Erase and Build Subjects table"
 println "B: Erase and Build Departments table"
 println "C: Print Subjects table"
 println "D: Print Departments table"
 println "E: Print the report of disciplines by Department"
-println "G: Erase and Build Ssections data"
+println "G: Erase and Build Sections data"
 println "H: Print a simple listing of all sections by department or by discipline"
 println "I: Print faculty and faculty schedules  by department"
 println "J: Print control-break section report for a department"
@@ -153,13 +164,21 @@ switch (s) {
         printSections(i)
         break
     case "i":
+        println "Enter Department for sections"
+        i = input.next().toUpperCase().trim()
+        printFaculty(i)
         break
+    //end of Kielans add
     case "j":
         break
     case "k":
         break
-    //end of Kielans add
+
     case "quit":
+        println "System is now exiting"
+        break
+    //Added this because I would always use q instead of quit.
+    case"q":
         println "System is now exiting"
         break
     default:

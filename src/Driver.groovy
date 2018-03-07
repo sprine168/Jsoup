@@ -1,6 +1,6 @@
 println "Starting...\n"
 
-GroovyWebScrape.getSections("CJLS")
+GroovyWebScrape.getSections("CSMP")
 
 println "\nDone!"
 

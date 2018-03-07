@@ -36,14 +36,12 @@ class GroovyWebScrape{
                 .execute()
 
         Document doc = res.parse()
-//        Document doc = Jsoup.parse(new File("CSMP.html"), "UTF-8", baseURL)
         def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
 
 
 
 
         Elements rows = doc.select("tr")
-        println "Found ${rows.size()} rows"
         def rC = 0
 
         if (rows.size() > 4) {
@@ -115,36 +113,33 @@ class GroovyWebScrape{
                     tags.each { tag ->
                         className = tag.attr("class").toString()
                         switch (className) {
-                            case "course_messages":
-                                /*
-                                This area gets a little rough.  Definitely can go over this in the future to make better
-                                First take the text in the tage and clean it up. Then I get the information on what
-                                drives the additional fees. That is the per variable. per can hold flat fee or something
-                                 like Credit Hour fee.  I then make an array of the mes variable split on ".". This
-                                either gives us a size for mes1 as 2 or 3.  if the size is 2, the message is the first
-                                item in the array.  The second message is usually the Additional Fees informtation.
-                                Last, the actual fee that will be charged is taken from the array.
-                                If the size is 2, the everything else is mostly the same but the additional message is
-                                set to "None".
-                                 */
-                                def mes = tag.text().trim()
-                                def per = mes.substring(mes.indexOf("(") + 1, mes.indexOf(")"))
-                                def mes1 = mes.split("\\.")
-                                if (mes1.size() > 2) {
-                                    sec.message = mes1[0]
-                                    sec.additionalMessage = mes1[1].substring(0,mes1[1].size()-3)
-                                    def fee = mes1[1].drop(mes1[1].size()-2) +"."+ (mes1[2].take(2))
-                                    sec.fees = Double.parseDouble(fee)
-                                } else {
-                                    sec.message = mes1[0].take(mes1[0].size()-3)
-                                    def fee = mes1[0].drop(mes1[0].size()-2) +"."+ (mes1[1].take(2))
-                                    sec.fees = Double.parseDouble(fee)
-                                    sec.additionalMessage = "None"
+                        /*
+                            Course_linked and course_fees handle the times when there are multiple messages in a table
+                            case course_fees splits the text on the first digit it encounters after another character.
+                            For instance 28.52 will split on 2 and make [ 28. , 52 ]
+
+                        */
+                            case "course_linked":
+                                sec.message = tag.text().trim()
+                                break
+                            case "course_fees":
+                                def m = tag.text().trim()
+                                def sub = m.split("(?<=\\D)(?=\\d)")
+                                def per = m.substring(m.indexOf("(")+1, m.indexOf(")"))
+                                def fee = sub[1].take(2)+"."+sub[2].take(2)
+                                if (sec.message != "") {
+                                    sec.message = sub[0]
+                                    sec.fees = fee
+
+                                }else{
+                                    sec.additionalMessage =sub[0]
+                                    sec.fees=fee
                                 }
                                 if (per.length()>8) {
-                                    per = per.drop(4)
+                                    per.drop(4)
                                 }
                                 sec.perWhat = per
+
                                 break
                             case "course_ends":
                                 def eD = tag.text()
@@ -168,7 +163,6 @@ class GroovyWebScrape{
                             case "course_term":
                                 sec.term = tag.text().trim()
                                 break
-
                         }
                     }
                 }//end of detail_row
@@ -176,7 +170,16 @@ class GroovyWebScrape{
             }//end of iterator
 
         }
-        //write to db
+        def insert = "Insert into Section(dept, crn, courseID, discipline, courseNumber, sectionNumber," +
+                " term, " +
+                "classType, days, classTime, room, instructor, beginDate, endDate, hours, availableSeats," +
+                "maximumEnrollment, message, additionalMessage, fees, perWhat, url) VALUES(? , ? , ? , ?" +
+                ", ? , ? , ? , ?, ? , ? , ? , ?, ? , ? , ? , ?, ? , ? , ? , ? , ? ,?)"
+        def params = [sec.department, sec.crn, sec.courseID, sec.discipline, sec.courseNumber,
+                      sec.secNum, sec.term, sec.classType, sec.days, sec.time, sec.room, sec.instructor,
+                      sec.beginDate, sec.endDate, sec.hours, sec.availableSeats, sec.maximumEnrollment,
+                      sec.message, sec.additionalMessage, sec.fees, sec.perWhat, sec.webPage]
+        sql.executeInsert(insert, params)
 //        println "Section: ${sec}"
 //        println rC
         sql.close()
