@@ -106,12 +106,54 @@ def printSections(String s){
     sql.close()
 }
 
+//Takes in arguements from the SELECT query in the printInstructors method.
+def instructorSchedule(String ins, String days, String hours, ArrayList emp) {
+
+
+    if (days == "") {
+        days = "Online"
+    }
+    if (hours == "-") {
+        hours == "Online"
+    }
+
+    def toAdd = 0
+    //if the emp list is empty than the first instructor passed is added
+    def i = new Instructor(ins, days, hours)
+    if (emp.size() == 0) {
+        emp.add(i)
+    } else {
+        //iterates through the list and if the instructor already exists on the list, their days and times are added
+        for (Instructor e : emp) {
+            if (e.instructor == i.instructor) {
+                e.addHours(i.hours)
+                if (e.days != i.days) {
+                    e.addDays(i.days)
+                }
+                break
+            }
+            //if an instructor is not on the list yet, a counter increases as the list is iterated through
+            else {
+                toAdd++
+            }
+        }
+        //if the instructor did not appear in the list, it is added to the list.
+        if (toAdd >= emp.size()) {
+            emp.add(i)
+        }
+    }
+}
+
 def printFaculty(String s) {
     def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
-
+    def ins = []
     sql.eachRow("SELECT instructor, days, classTime FROM Section WHERE dept LIKE ${s}"){
+        instructorSchedule(it.getAt('instructor'), it.getAt('days'),it.getAt('classTime'), ins)
+    }
+    ins.each {
         println it
     }
+
     sql.close()
 }
 //End of Kielan's methods
