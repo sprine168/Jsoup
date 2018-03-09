@@ -64,8 +64,6 @@ class GroovyWebScrape{
                                         sec.beginDate, sec.endDate, sec.hours, sec.availableSeats, sec.maximumEnrollment,
                         sec.message, sec.additionalMessage, sec.fees, sec.perWhat, sec.webPage]
                         sql.executeInsert(insert, params)
-//                        println "Section: $sec"
-//                        rC++
                     }
 
                     def cellCount = cells.size()
@@ -87,8 +85,6 @@ class GroovyWebScrape{
                             sec.discipline = cN.take(3)
                             sec.courseNumber = cN.drop(3)
                             def type = cells.get(3).text().trim().split("\\,")
-
-//                            sec.classType = cells.get(3).text().trim()
                             sec.classType = type[0]
                             sec.hours = cells.get(5).text().trim().toInteger()
                             sec.days = cells.get(6).text().trim()
@@ -179,9 +175,8 @@ class GroovyWebScrape{
                       sec.secNum, sec.term, sec.classType, sec.days, sec.time, sec.room, sec.instructor,
                       sec.beginDate, sec.endDate, sec.hours, sec.availableSeats, sec.maximumEnrollment,
                       sec.message, sec.additionalMessage, sec.fees, sec.perWhat, sec.webPage]
+
         sql.executeInsert(insert, params)
-//        println "Section: ${sec}"
-//        println rC
         sql.close()
     }//end of getSections
 
