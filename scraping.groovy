@@ -6,6 +6,7 @@ import org.jsoup.select.Elements
 
 /*
 * Steven Prine
+*Kielan Sullivan
 * csc-346
 * Prof. Noynaert
 */
@@ -82,8 +83,32 @@ def printDepartments() throws IO {
     }
     sql.close()
 }
-//Kielan start methods
-def sectionCreate(String s){
+
+def disciplinesReport(def s) throws IO{
+    def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
+    sql.eachRow("Select Abbrv, Subject From Subjects WHERE Abbrv = ${s}"){
+        println it
+    }
+}
+
+def breakDepartments(def s) {
+    def data = Sql.newInstance("jdbc:sqlite:schedule.db", "org.sqlite.JDBC")
+    data.eachRow("SELECT disc AS Department, name AS Title FROM departments WHERE disc LIKE ${s}") {
+        println it
+    }
+    data.close()
+
+    def sql = Sql.newInstance("jdbc:sqlite:schedule.db", "org.sqlite.JDBC")
+    sql.eachRow("SELECT disciplines.disc, disciplines.name FROM departments, sections, disciplines WHERE sections.department = departments.disc AND disciplines.disc = sections.discipline AND departments.disc = ${s} GROUP BY disciplines.name") { list ->
+        println "\t $list"
+    }
+    sql.close()
+
+
+}
+
+//------------------------------Kielan start methods----------------------------
+def sectionCreate(String s) {
     GroovyWebScrape.getSections(s)
     println "Section Table Created Successfully for Department ${s}!"
 
@@ -97,10 +122,10 @@ def sectionDelete(String s) throws IO {
 }
 
 
-def printSections(String s){
+def printSections(String s) {
     def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
 
-    sql.eachRow("SELECT * FROM Section WHERE dept LIKE ${s} OR discipline LIKE ${s}"){
+    sql.eachRow("SELECT * FROM Section WHERE dept LIKE ${s} OR discipline LIKE ${s}") {
         println it
     }
     sql.close()
@@ -147,8 +172,8 @@ def instructorSchedule(String ins, String days, String hours, ArrayList emp) {
 def printFaculty(String s) {
     def sql = Sql.newInstance("jdbc:sqlite:jsoup.db", "org.sqlite.JDBC")
     def ins = []
-    sql.eachRow("SELECT instructor, days, classTime FROM Section WHERE dept LIKE ${s}"){
-        instructorSchedule(it.getAt('instructor'), it.getAt('days'),it.getAt('classTime'), ins)
+    sql.eachRow("SELECT instructor, days, classTime FROM Section WHERE dept LIKE ${s}") {
+        instructorSchedule(it.getAt('instructor'), it.getAt('days'), it.getAt('classTime'), ins)
     }
     ins.each {
         println it
@@ -156,7 +181,7 @@ def printFaculty(String s) {
 
     sql.close()
 }
-//End of Kielan's methods
+//----------------------------------------End of Kielan's methods
 
 println "A: Erase and Build Subjects table"
 println "B: Erase and Build Departments table"
@@ -191,9 +216,12 @@ switch (s) {
         printDepartments();
         break
     case "e":
-        println "future disciplines print"
+        println "Enter a Discipline"
+        def i = input.next().toUpperCase().trim()
+        disciplinesReport(i)
         break
-    //Kielan
+
+//Kielan
     case "g":
         println "Enter Department for sections"
         i = input.next().toUpperCase().trim()
@@ -210,17 +238,30 @@ switch (s) {
         i = input.next().toUpperCase().trim()
         printFaculty(i)
         break
-    //end of Kielans add
+//end of Kielans add
+
     case "j":
+        println "Enter Department for Break Sections"
+        def i = input.next().toUpperCase().trim()
+        breakDepartments(i)
         break
     case "k":
-        break
-
+        def checker = true
+        while (checker) {
+            println "Enter Department for Break Sections or Type Quit or Q to exit"
+            def i = input.next().toUpperCase().trim()
+            if (i.trim().toLowerCase() == "quit" || i.toLowerCase().trim() == "q") {
+                println "System is exiting"
+                System.exit(1)
+            }else{
+                breakDepartments(i)
+            }
+        }
     case "quit":
         println "System is now exiting"
         break
-    //Added this because I would always use q instead of quit.
-    case"q":
+//Added this because I would always use q instead of quit.
+    case "q":
         println "System is now exiting"
         break
     default:
